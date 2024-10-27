@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        ENVIRONMENT: ${ENVIRONMENT}  # Pass environment argument to Dockerfile
+    ports:
+      - "5000:5000"  # Development port
+      - "8000:8000"  # Production port
+      - "5001:5001"
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT}  # Pass the environment variable to the container
+      - FLASK_ENV=${ENVIRONMENT}
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    volumes:
+      - ./scan_results:/app/scan_results  # Map scan_results folder to the host
+    networks:
+      - app-network
+    depends_on:
+      - redis
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile  # Reuse the same image, as it includes Celery and app dependencies
+    command: celery -A app.celery worker --loglevel=info
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    depends_on:
+      - app
+    volumes:
+      - ./nginx.conf.template:/etc/nginx/conf.d/default.conf.template
+      - ./nginx-entrypoint.sh:/nginx-entrypoint.sh
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT}
+    entrypoint: ["/bin/sh", "/nginx-entrypoint.sh"]
+    networks:
+      - app-network
+
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

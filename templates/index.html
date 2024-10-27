@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Nikto Scan</title>
+</head>
+<body>
+    <form id="scan-form" method="POST" action="/">
+        <input type="text" name="domain" placeholder="Enter domain" required>
+        <button type="submit">Start Scan</button>
+    </form>
+
+    <div id="status"></div>
+
+    <script>
+        document.getElementById("scan-form").addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            fetch("/", {
+                method: "POST",
+                body: new FormData(this)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const taskId = data.task_id;
+                checkStatus(taskId);
+            });
+        });
+
+        function checkStatus(taskId) {
+            fetch(`/status/${taskId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const statusDiv = document.getElementById("status");
+                    if (data.status === "Completed") {
+                        statusDiv.innerHTML = `
+                            <p>Scan complete.</p>
+                            <a href="/scan_results/${data.result.xml}" download>Download XML Report</a>
+                            <a href="/scan_results/${data.result.html}" download>Download HTML Report</a>
+                        `;
+                    } else {
+                        statusDiv.innerHTML = `<p>Scan in progress: ${data.status}</p>`;
+                        setTimeout(() => checkStatus(taskId), 5000);
+                    }
+                });
+        }
+    </script>
+</body>
+</html>

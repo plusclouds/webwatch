@@ -1,0 +1,6 @@
+Flask
+lxml
+gunicorn
+celery
+redis
+python-dotenv
