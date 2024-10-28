@@ -2,6 +2,8 @@
 
 **WebWatch** is a web vulnerability scanning application that helps users identify security issues on their websites. Built with Flask, Celery, and Nikto, it enables asynchronous domain scanning and generates detailed reports in XML and HTML formats.
 
+Credits; this tool is created by [GRC Assure](https://grcassure.com/) and Maintainer by [Mafu.Tech](https://www.mufa.tech/) on behalf of [PlusClouds](https://plusclouds.com).
+
 ## Features
 
 - **Automated Vulnerability Scanning**: Utilizes Nikto to scan domains for vulnerabilities.
